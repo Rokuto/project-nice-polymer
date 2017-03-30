@@ -11,21 +11,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="components/index.html">
  
 <dom-module id="my-app">
-
   <template id="app">
     <firebase-app 
       auth-domain="maindb-20e62.firebaseapp.com"
       database-url="https://maindb-20e62.firebaseio.com"
       api-key="AIzaSyBBpLXglM9SsEupD5adgM8ka4p9x5wl1V0"
-      >
+    >
     </firebase-app>
-    <firebase-auth id="auth" user="{{user}}" provider="google" on-error="showError"></firebase-auth>
+
+    <firebase-auth 
+      id="auth" 
+      user="{{user}}" 
+      provider="google" 
+      on-error="showError"
+    >
+    </firebase-auth>
+
     <firebase-document 
       id="base" 
       path="/articles/temp" 
       data="{{test}}"
     >
     </firebase-document>
+  
+    <firebase-document
+      id="removal"
+      path="/articles/drafted/{{removeId}}"
+      data="{{trash}}"
+    >
+    </firebase-document>  
+    
+    
     <style>
 
       :host {
@@ -67,11 +83,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         width: 100%;
         height: 80%;
       }
+      .flex-center-justified {
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+      }
 
 
     </style>
+    
+    
 
-    <app-location route="{{route}}"></app-location>
+    <app-location 
+      route="{{route}}"
+    >
+    </app-location>
+
     <app-route
         route="{{route}}"
         pattern="/:page"
@@ -79,12 +105,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         tail="{{subroute}}">
     </app-route>
 
-    <app-drawer-layout force-narrow fullbleed>
-  
-      <app-drawer id="draft" align="right" swipe-open>
-        <app-toolbar>Drafts</app-toolbar>
+    <app-drawer-layout 
+      force-narrow 
+      fullbleed
+    >
+      <app-drawer 
+        id="draft" 
+        align="right" 
+        swipe-open
+      >
+        <app-toolbar>
+          Drafts
+        </app-toolbar>
+        
         <paper-dialog-scrollable>
-          <!--
           <firebase-query
             id="query"
             path="/articles/drafted"
@@ -94,101 +128,360 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           >  
           </firebase-query>
           
-          <template is="dom-repeat" items="{{drafting}}">
-            <a>{{item.title}}</a><br>  
-          </template>
-          -->
-
+          <div 
+            class="flex-center-justified"
+          >
+            <template 
+              is="dom-repeat"
+              items="{{drafting}}"
+            >
+              <paper-buttom 
+                value="{{item}}" 
+                on-tap="editDraftOpen"
+                raised
+              >
+                {{item.title}}
+              </paper-buttom>
+            </template>
+          </div>
        </paper-dialog-scrollable>
       </app-drawer>
       
-      <app-drawer id="navi">
-        <app-toolbar>N.I.C.E</app-toolbar>
+      <app-drawer 
+        id="navi"
+      >
+        <app-toolbar>
+          N.I.C.E
+        </app-toolbar>
         
-        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-          <a name="root-home" href="/">Home</a>
-          <a name="articles" href="/articles">Articles</a>
-          <a name="infographics" href="/infographics">Infographics</a>
+        <iron-selector 
+          selected="[[page]]" 
+          attr-for-selected="name" 
+          class="drawer-list" 
+          role="navigation"
+        >
+          <a 
+            name="root-home" 
+            href="/"
+          >
+            Home
+          </a>
+          
+          <a 
+            name="articles" 
+            href="/articles"
+          >
+            Articles
+          </a>
+          
+          <a 
+            name="infographics" 
+            href="/infographics"
+          >
+            Infographics
+          </a>
         </iron-selector>
       </app-drawer>
 
-      <app-header-layout has-scrolling-region>
-
-        <app-header condenses reveals effects="waterfall">
+      <app-header-layout 
+        has-scrolling-region
+      >
+        <app-header 
+          condenses 
+          reveals 
+          effects="waterfall"
+        >
           <app-toolbar>
-            
-            <template is="dom-if" if="{{checkUser(user)}}">
-              <paper-icon-button icon="menu" on-tap="naviToggle"></paper-icon-button>
+            <template 
+              is="dom-if" 
+              if="{{checkUser(user)}}"
+            >
+              <paper-icon-button 
+                icon="menu" 
+                on-tap="naviToggle" 
+              ></paper-icon-button>
             </template>
             
-            <div title>N.I.C.E</div>
+            <div 
+              title
+            >
+              N.I.C.E
+            </div>
             
-            <template is="dom-if" if="{{!checkUser(user)}}">
-              <paper-icon-button icon="power-settings-new" on-tap="signInWithGoogle"></paper-icon-button>
+            <template 
+              is="dom-if" 
+              if="{{!checkUser(user)}}"
+            >
+              <paper-icon-button 
+                icon="power-settings-new" 
+                on-tap="signInWithGoogle" 
+              ></paper-icon-button>
             </template>
+            
             <!--
             <paper-icon-button icon="power-settings-new" hidden=true on-click="loginOpen"></paper-icon-button>
             -->
-            <template is="dom-if" if="{{checkUser(user)}}">
-              <paper-icon-button icon="drafts" on-tap="draftOpen"></paper-icon-button>
-              <paper-icon-button icon="note-add" on-tap="newArticle.open()"></paper-icon-button>
-              <paper-icon-button icon="power-settings-new" on-tap="signOut"></paper-icon-button>
-            </template>
             
+            <template 
+              is="dom-if" 
+              if="{{checkUser(user)}}"
+            >
+              <paper-icon-button 
+                icon="drafts" 
+                on-tap="draftOpen" 
+              ></paper-icon-button>
+                
+              <paper-icon-button 
+                icon="note-add" 
+                on-tap="newArticleOpen" 
+              ></paper-icon-button>
+              
+              <paper-icon-button 
+                icon="power-settings-new" 
+                on-tap="signOut"
+              ></paper-icon-button>
+            </template>
           </app-toolbar>
         </app-header>
 
-        <iron-pages role="main" selected="[[page]]" attr-for-selected="name">
-          <root-home name="root-home" user="{{user}}" ></root-home>
-          <article-list name="articles"></article-list>
-          <infographic-list name="infographics"></infographic-list>
+        <iron-pages 
+          role="main" 
+          selected="[[page]]"
+          attr-for-selected="name"
+        >
+          <root-home 
+            name="root-home" 
+            user="{{user}}" 
+          ></root-home>
+          
+          <article-list 
+            name="articles"
+          ></article-list>
+          
+          <infographic-list 
+            name="infographics"
+          ></infographic-list>
         </iron-pages>
-
       </app-header-layout>
-
     </app-drawer-layout>
     
-  <paper-dialog id="newArticle" with-backdrop>
-    <paper-toggle-button id="published" noink >Publish</paper-toggle-button>
-    <paper-input id="title" label="Article Title" name="title" value""></paper-input>
-    <paper-textarea id="text" label="Article Text" name="text" value"" ></paper-textarea>
-    <paper-button on-tap="addArticle" >Create</paper-button>
-    <paper-button onclick="newArticle.close()" >Cancel</paper-button>
-  </paper-dialog>
+    <paper-dialog 
+      id="newArticle" 
+      with-backdrop
+    >
+      <paper-toggle-button 
+        id="published" 
+        noink
+      >
+        Publish
+      </paper-toggle-button>
+    
+      <paper-input 
+        id="title" 
+        label="Article Title" 
+        name="title" 
+        value""
+      ></paper-input>
+    
+      <paper-textarea 
+        id="text" 
+        label="Article Text" 
+        name="text" 
+        value"" 
+      ></paper-textarea>
+    
+      <paper-button 
+        on-tap="addArticle" 
+      >
+        Create
+      </paper-button>
+    
+      <paper-button 
+        on-tap="newArticleClose" 
+      >
+        Cancel
+      </paper-button>
+    </paper-dialog>
+    
+    <paper-dialog 
+      id="editDraft" 
+      with-backdrop
+    >
+      <paper-toggle-button 
+        id="draftPublished" 
+        noink
+      >
+        Publish
+      </paper-toggle-button>
+      
+      <paper-input 
+        id="draftTitle" 
+        label="Article Title" 
+        name="title" 
+        value="{{editDraftTitle}}"
+      ></paper-input>
+    
+      <paper-textarea 
+        id="draftText" 
+        label="Article Text" 
+        name="text" 
+        value="{{editDraftText}}" 
+      ></paper-textarea>
+    
+      <paper-button 
+        on-tap="editMe" 
+      >
+        <iron-icon 
+          icon="check"
+        ></iron-icon>
+      </paper-button>
+    
+      <paper-button 
+        on-tap="editDraftCLose" 
+      >
+        <iron-icon 
+          icon="close"
+        ></iron-icon>
+      </paper-button>
+    </paper-dialog>
+    
+    <paper-dialog 
+      id="login" 
+      with-backdrop
+    >
+        <div 
+          class="error" 
+          hidden$="{{!error}}"
+        >
+          {{error.code}}: {{error.message}}
+        </div>
+        
+        <div 
+          hidden$="{{user}}"
+        >
+          <h3>
+            Email/Password
+          </h3>
+          
+          <form 
+            on-submit="signInWithEmailAndPassword"
+          >
+            <input 
+              value="{{email::input}}" 
+              type="email" 
+              placeholder="Email"
+            ></input>
+            
+            <input 
+              value="{{password::input}}" 
+              type="password" 
+              placeholder="Password"
+            ></input>
+            
+            <button 
+              type="submit" 
+              on-tap="signInWithEmailAndPassword"
+            >
+              Sign In
+            </button>
+            
+            <button 
+              type="button" 
+              on-tap="createUserWithEmailAndPassword"
+            >
+              Sign Up
+            </button>
+          </form>
+          
+          <p>
+            <paper-icon-button 
+              icon="perm-identity" 
+              on-tap="signInAnonymously"
+            ></paper-icon-button>
+              
+            <button 
+              is="paper-icon-button-light" 
+              title="google+"
+            >
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1024px-Google_%22G%22_Logo.svg.png" 
+                alt="google+"
+              ></img>
+            </button>
+            
+            <button 
+              is="paper-icon-button-light" 
+              title="octocat"
+            >
+              <img 
+                src="https://assets-cdn.github.com/images/modules/logos_page/Octocat.png" 
+                alt="octocat"
+              >
+            </button>
+          </p>
+        </div>
+        
+        <div 
+          hidden$="{{!user}}"
+        >
+          <table>
+            <tr>
+              <th>
+                uid
+              </th> 
+            
+              <td>
+                {{user.uid}}
+              </td>
+            </tr>
+          
+            <paper-input 
+              id="specialUID" 
+              name="UID" 
+              hidden=true 
+              value="{{user.uid}}"
+            ></paper-input>
+          
+            <tr>
+              <th>
+                displayName
+              </th> 
+              
+              <td>
+                {{user.displayName}}
+              </td>
+            </tr>
+          
+            <tr>
+              <th>
+                email
+              </th> 
+              
+              <td>
+                {{user.email}}
+              </td>
+            </tr>
+          
+            <tr>
+              <th>
+                emailVerified
+              </th> 
+              
+              <td>
+                {{user.emailVerified}}
+              </td>
+            </tr>
+          </table>
   
-  <paper-dialog id="login" with-backdrop>
-      <div class="error" hidden$="{{!error}}">{{error.code}}: {{error.message}}</div>
-      <div hidden$="{{user}}">
-        <h3>Email/Password</h3>
-        <form on-submit="signInWithEmailAndPassword">
-          <input value="{{email::input}}" type="email" placeholder="Email">
-          <input value="{{password::input}}" type="password" placeholder="Password">
-          <button type="submit" on-tap="signInWithEmailAndPassword">Sign In</button>
-          <button type="button" on-tap="createUserWithEmailAndPassword">Sign Up</button>
-        </form>
-        <p>
-          <paper-icon-button icon="perm-identity" on-tap="signInAnonymously"></paper-icon-button>
-          <button is="paper-icon-button-light" title="google+">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/1024px-Google_%22G%22_Logo.svg.png" alt="google+">
+          <button 
+            on-tap="signOut"
+          >
+            Sign Out
           </button>
-          <button is="paper-icon-button-light" title="octocat">
-            <img src="https://assets-cdn.github.com/images/modules/logos_page/Octocat.png" alt="octocat">
-          </button>
-        </p>
-      </div>
-      <div hidden$="{{!user}}">
-        <table>
-          <tr><th>uid</th> <td>{{user.uid}}</td></tr>
-          <paper-input id="specialUID" name="UID" hidden=true value="{{user.uid}}"></paper-input>
-          <tr><th>displayName</th> <td>{{user.displayName}}</td></tr>
-          <tr><th>email</th> <td>{{user.email}}</td></tr>
-          <tr><th>emailVerified</th> <td>{{user.emailVerified}}</td></tr>
-        </table>
-
-        <button on-tap="signOut">Sign Out</button>
-      </div>
-  </paper-dialog>
+        </div>
+    </paper-dialog>
   </template>
+  
   
 
   <script>
@@ -204,22 +497,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           reflectToAttribute: true,
           observer: '_pageChanged'
         },
-        
         error: {
           type: Object,
           value: null
         },
-        
         user: {
           type: Object,
           notify: true,
           reflectToAttribute: true
         },
-        
         articles: {
           type: Object,
           value: null
-        }
+        },
+        editDraftTitle: String,
+        editDraftText: String,
+        removeId: String,
         
       },
       
@@ -235,7 +528,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // load page import on demand.
         const urlPage = page === 'root-home' ? 'root-home' : page;
         this.importHref(
-          this.resolveUrl(`pages/${urlPage}.html`), null, null, true);
+        this.resolveUrl(`pages/${urlPage}.html`), null, null, true);
       },
       
       ready: function() {
@@ -269,7 +562,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.auth.signInWithPopup().then(function(){
           location.reload();
         });
-        //window.location.reload();
+        
+        console.log(user);
+        
+        /*this.$.base.data = {
+          displayName: this.user.displayName,
+          uid: this.$.specialUID.value
+        };
+        
+        this.$.base.save("/users/others");  
+        
+        this.$.base.reset();*/
       },
       
       signInWithEmailAndPassword: function(e) {
@@ -287,12 +590,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         location.reload();
       },
       
-      
       addArticle: function() {
+        if(this.$.title.value.trim().length === 0 || this.$.text.value.trim().length === 0){
+          this.$.title.value = '';
+          this.$.text.value= '';
+          this.$.published.checked = false;
+          console.log("Cannot add");
+          return
+        }
         
         this.$.base.data = {
-          title: this.$.title.value,
-          context: this.$.text.value,
+          title: this.$.title.value.trim(),
+          context: this.$.text.value.trim(),
           uid: this.$.specialUID.value
         };
         
@@ -306,10 +615,59 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.title.value = '';
         this.$.text.value= '';
         this.$.published.checked = false;
+        this.$$("#newArticle").close();
+      },
+      
+      editMe: function() {
+        console.log("No shit Sherlock");
+        if(this.$$("#draftTitle").value.trim().length === 0 || this.$$("#draftText").value.trim().length === 0){
+          console.log("Cannot Edit");
+          return
+        }
+        
+        this.$.base.data = {
+          title: this.$$("#draftTitle").value.trim(),
+          context: this.$$("#draftText").value.trim(),
+          uid: this.$.specialUID.value
+        };
+        
+        if(this.$.draftPublished.checked){
+          this.$.base.save("/articles/published");  
+        }else{
+          this.$.base.save("/articles/drafted");
+        }
+        this.$.base.reset();
+        
+        
+        this.$.removal.destroy().then(function(){
+          console.log("Success");
+        });
+        
+        this.$$("#editDraft").close();
       },
       
       draftOpen: function() {
         this.$$("#draft").open();
+      },
+      
+      newArticleOpen: function() {
+        this.$$("#newArticle").open();
+      },
+      
+      editDraftOpen: function(e) {
+        console.log(this.user);
+        this.editDraftTitle = e.target.value.title;
+        this.editDraftText = e.target.value.context; 
+        this.removeId = e.target.value.$key;
+        this.$$("#editDraft").open();
+      },
+      
+      newArticleClose: function() {
+        this.$$("#newArticle").close();
+      },
+      
+      editDraftCLose: function() {
+        this.$$("#editDraft").close();
       },
       
       naviToggle: function() {
@@ -325,5 +683,4 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
   </script>
-
 </dom-module>

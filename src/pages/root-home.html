@@ -11,64 +11,220 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
 <dom-module id="root-home">
-
   <template>
-  
-  <firebase-query
-    id="query"
-    path="/articles/published"
-    data="{{article}}"
-  >  
-  </firebase-query>
-  
+    <firebase-query
+      id="query"
+      path="/articles/published"
+      data="{{article}}"
+    >  
+    </firebase-query>
+    
+    <firebase-document
+      id="removal"
+      path="/articles/published/{{removeId}}"
+      data="{{trash}}"
+    >
+    </firebase-document>
+    
+    <firebase-document
+      id="swap"
+      path="/articles/temp"
+      data="{{new}}"
+    >
+    </firebase-document>
+    
+    
+    
     <style>
       .inputSize{
         height: 60px;
       }
       .flex-center-align {
         @apply(--layout-horizontal);
-        @apply(--layout-center);
+        @apply(--layout-center-center);
+        @apply(--layout-wrap);
+        
+      }
+      .flex-center-justified {
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+      }
+      .flex-wrap {
+        
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+      }
+      
+      .tile {
+        display: inline-block;
+        float: left;
+        vertical-align: top;
+        
+        @apply(--paper-font-title);
+        @apply(--layout-vertical);
+        @apply(--layout-center-center);
+      }
+      
+      .container {
+        width: 100%;
+      }
+      .unifiedWidth{
+        min-width: 250px;
+        max-width: 250px;
+        margin: 10px;
+      }
+      .ninja{
+        display: none;
+      }
+      .shogun{
+        display: block;
       }
       
     </style>
-
-    <template is="dom-repeat" items="{{article}}">
-
-      <paper-card>
-        
-        <paper-material id="{{headId(index)}}" elevation="0" class="inputSize"> 
-          <div class="container flex-center-align">
-            <div>[[item.title]]</div>
-          </div>
-        </paper-material>
-        
-        <template is="dom-if" if="{{mine(item.uid)}}">
-          <paper-input id="{{titleId(index)}}" label="title" name="title" hidden=true value="{{item.title}}"></paper-input>
-        </template>
-        
-        
-        
-        <paper-material id="{{contextId(index)}}" elevation="0" class="inputSize"> 
-          [[item.context]]
-        </paper-material>
-        
-        
-        <template is="dom-if" if="{{mine(item.uid)}}">
-          <paper-input id="{{textId(index)}}" label="context" name="context" hidden=true value="{{item.context}}"></paper-input>
-        </template>
-        <div class="card-actions">
-          <template is="dom-if" if="{{mine(item.uid)}}">
-            <paper-button value="{{index}}" on-click="showMe">
-              <iron-icon id="{{iconId(index)}}" value="{{index}}" icon="create"></iron-icon>
-            </paper-button>
-          </template>
-          <paper-button>Share</paper-button>
+    
+    
+    
+    <div
+      class="container flex-center-align"
+    >
+      <paper-dialog
+        id="articleModal"
+        with-backdrop
+      >
+        <div>
+          {{trash}}
         </div>
-      </paper-card>
+      </paper-dialog>
       
-    </template>
-  
+      <template 
+        is="dom-repeat" 
+        items="{{article}}"
+      >
+        <paper-card 
+          image="https://s-media-cache-ak0.pinimg.com/564x/8f/0d/14/8f0d14d355d2c957d43247407fed6cb9.jpg" c
+          class="unifiedWidth "
+        >
+          <paper-material 
+            id="{{headId(index)}}" 
+            elevation="0"
+            class="inputSize shogun"
+          > 
+            <div 
+              class="flex-center-align"
+            >
+              <div>
+                [[item.title]]
+              </div>
+            </div>
+          </paper-material>
+          
+          <template 
+            is="dom-if" 
+            if="{{mine(item.uid)}}"
+          >
+            <template 
+              is="dom-if" 
+              if="{{mine(item.uid)}}"
+            >
+              <paper-input 
+                id="{{titleId(index)}}" 
+                label="title" 
+                name="title" 
+                class="ninja" 
+                value="{{item.title}}"
+              ></paper-input>
+            </template>
+          </template>
+          
+          <paper-material 
+            id="{{contextId(index)}}" 
+            elevation="0" 
+            class="inputSize shogun"
+          > 
+            <div>
+              [[readMore(item.context)]]
+              
+              <paper-button 
+                on-tap="moreOpen" 
+              >
+                More
+              </paper-button>
+            </div>
+          </paper-material>
+          
+          <template 
+            is="dom-if" 
+            if="{{mine(item.uid)}}"
+          >
+            <paper-input 
+              id="{{textId(index)}}" 
+              label="context" 
+              name="context" 
+              class="ninja" 
+              value="{{item.context}}"
+            ></paper-input>
+          </template>
+          
+          <div 
+            class="card-actions flex-center-align"
+          >
+            <template 
+              is="dom-if" 
+              if="{{mine(item.uid)}}"
+            >
+              <paper-button 
+                value="{{index}}" 
+                on-click="showMe"
+              >
+                <iron-icon 
+                  id="{{iconId(index)}}" 
+                  value="{{index}}" 
+                  icon="create"
+                ></iron-icon>
+              </paper-button>
+              
+              <paper-button 
+                id="{{clearId(index)}}"
+                value="{{item.$key}}" 
+                on-click="deleteMe"
+                class="shogun"
+              >
+                <iron-icon 
+                  value="{{item.$key}}" 
+                  icon="clear"
+                ></iron-icon>
+              </paper-button>
+              
+              <paper-button 
+                id="{{draftId(index)}}"
+                value="{{item}}" 
+                on-click="draftMe"
+                class="ninja"
+              >
+                <iron-icon 
+                  value="{{item}}" 
+                  icon="drafts"
+                ></iron-icon>
+              </paper-button>
+            </template>
+            
+            <template 
+              is="dom-if" 
+              if="{{!mine(item.uid)}}"
+            >
+              <paper-button>
+                <iron-icon 
+                  icon="face"
+                ></iron-icon>
+              </paper-button>
+            </template>
+          </div>
+        </paper-card>
+      </template>
+    </div>
   </template>
+  
+  
   
   <script>
     
@@ -77,6 +233,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       is: 'root-home',
       properties: {
         uid: String,
+        removeId: String,
         user: {
           type: Object,
           notify: true,
@@ -86,22 +243,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         data: {
           type: Object,
           observer: 'dataChanged'
-        }
-        
+        },
+       
       },
     
       ready: function() {
-        console.log("Harder Better Faster Stronger");        
+        console.log("Harder Better Faster Stronger");   
       },
     
+      dataChanged: function (newData, oldData) {
+        // do something when the query returns values
+      },
+      
       updateUser: function(user) {
         if (user) {
           this.uid = user.uid;
         }
-      },
-      
-      dataChanged: function (newData, oldData) {
-        // do something when the query returns values
       },
       
       mine: function(myId) {
@@ -109,18 +266,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       
       showMe: function(e) {
-        if(this.$$(`#title${e.target.value}`).hidden){
-          this.$$(`#title${e.target.value}`).hidden = false;
-          this.$$(`#text${e.target.value}`).hidden = false;
-          this.$$(`#icon${e.target.value}`).icon = "check";
-          this.$$(`#context${e.target.value}`).hidden = true;
-          this.$$(`#head${e.target.value}`).hidden = true;
-        }else{
-          this.$$(`#title${e.target.value}`).hidden = true;
-          this.$$(`#text${e.target.value}`).hidden = true;
+        
+        console.log( this.$$(`#iconic${e.target.value}`) );
+        
+        if(this.$$(`#context${e.target.value}`).style.display === "none"){
+          this.$$(`#title${e.target.value}`).style.display = "none";
+          this.$$(`#text${e.target.value}`).style.display = "none";
+          this.$$(`#draft${e.target.value}`).style.display = "none";
           this.$$(`#icon${e.target.value}`).icon = "create";
-          this.$$(`#context${e.target.value}`).hidden = false;
-          this.$$(`#head${e.target.value}`).hidden = false;
+          this.$$(`#clear${e.target.value}`).style.display = "block";
+          this.$$(`#context${e.target.value}`).style.display = "block";
+          this.$$(`#head${e.target.value}`).style.display = "block";
+        }else{
+          this.$$(`#title${e.target.value}`).style.display = "block";
+          this.$$(`#text${e.target.value}`).style.display = "block";
+          this.$$(`#draft${e.target.value}`).style.display = "block";
+          this.$$(`#icon${e.target.value}`).icon = "check";
+          this.$$(`#clear${e.target.value}`).style.display = "none";
+          this.$$(`#context${e.target.value}`).style.display = "none";
+          this.$$(`#head${e.target.value}`).style.display = "none";
         }
         
       },
@@ -137,6 +301,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return `icon${idIcon}`;
       },
       
+      clearId: function(idIcon) {
+        return `clear${idIcon}`;
+      },
+      
+      draftId: function(idIcon) {
+        return `draft${idIcon}`;
+      },
+      
       contextId: function(contextIcon) {
         return `context${contextIcon}`;
       },
@@ -144,6 +316,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       headId: function(contextIcon) {
         return `head${contextIcon}`;
       },
+      
+      checkUser: function(userId) {
+        return !!userId;
+      },
+      
+      readMore: function(content) {
+        if(content.length <= 45){
+          return content;
+        }else{
+          return `${content.substring(0,45)} ...`;
+        }
+      },
+      
+      deleteMe: function(e) {
+        this.removeId = e.target.value;
+        this.$.removal.destroy().then(function(){
+          console.log("Success");
+        });
+      },
+      
+      moreOpen: function(e) {
+        this.$.articleModal.open();
+      },
+      
+      draftMe: function(e) {
+        console.log(e.target.value);
+       
+        this.$.swap.data = {
+          title: e.target.value.title,
+          context: e.target.value.context,
+          uid: e.target.value.uid
+        };
+        
+        this.$.swap.save("/articles/drafted");
+  
+        this.$.swap.reset();
+
+        this.removeId = e.target.value.$key;
+        this.$.removal.destroy().then(function(){
+          console.log("Success");
+        });
+      }
       
     });
 
