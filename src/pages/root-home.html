@@ -331,6 +331,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       
       deleteMe: function(e) {
         this.removeId = e.target.value;
+        console.log(removeId)
         this.$.removal.destroy().then(function(){
           console.log("Success");
         });
